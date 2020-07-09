@@ -5,15 +5,15 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const mongoose = require('mongoose');
 const session = require('express-session');
-
+let MongoStore = require('connect-mongo')(session);
 const flash = require('connect-flash');
 const passport = require('passport');
 const methodOverride = require('method-override');
-
+const getAllCategories = require('./routes/admin/categories/middleware/getAllCategories');
+require('./lib/passport');
 require('dotenv').config();
 
-const Category = require('./routes/admin/categories/models/Category');
-const getAllCategories = require('./routes/admin/categories/middleware/getAllCategories');
+// const Category = require('./routes/admin/categories/models/Category');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users/usersRoutes');
@@ -38,8 +38,9 @@ app.set('view engine', 'ejs');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-// app.use(cookieParser());
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(methodOverride('_method'));
 
 // app.use((req, res, next) => {
 //   Category.find({}, (err, categories) => {
@@ -67,10 +68,9 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use((req, res, next) => {
+app.use(function (req, res, next) {
   res.locals.user = req.user;
   res.locals.errors = req.flash('errors');
-  res.locals.perrors = req.flash('perrors');
   res.locals.messages = req.flash('messages');
   res.locals.success = req.flash('success');
   next();
@@ -94,7 +94,7 @@ app.use(function (err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  // res.render('error');
 });
 
 module.exports = app;
